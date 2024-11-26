@@ -1,10 +1,101 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <title>$Title$</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Мигающие фонарики</title>
 </head>
 <body>
-$END$
+<h2>web-color show</h2>
+<canvas id="light" width="300" height="300"></canvas>
+<div>
+  <label for="slider"></label>
+  <input type="range" id="slider" min="0" max="255" value="52" oninput="valueDisplay.textContent=this.value">
+  <span id="valueDisplay">52</span>
+</div>
+<div>
+  <button onclick="f1()">play</button>
+  <button onclick="f2()">stop</button>
+  <audio src="SpaceGadget.mp3" id="my_audio"></audio>
+  <p id="t1">
+    ...........
+  </p>
+</div>
+<script>
+
+
+</script>
+<script>
+  const canvas = document.getElementById('light');
+  const ctx = canvas.getContext('2d');
+  const slider = document.getElementById('slider');
+
+  var targetObject;
+  var context, analyser;
+
+  function drawTriangle() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    let originX = canvas.width / 2;
+    let originY = canvas.height / 2;
+
+    // Изменяем цвет на основе значения слайдера
+    let red = Math.floor(slider.value);
+    let green = Math.floor((slider.value * 2) * 2.55);
+    ctx.fillStyle = `rgb(${red}, 105, ${green}, 0.75)`;
+
+    ctx.beginPath();
+    ctx.moveTo(originX, originY);
+    ctx.lineTo(originX, originY - canvas.height / 2);
+    ctx.lineTo(originX - canvas.width / 2, originY);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  // Обработчик события на слайдер
+  slider.addEventListener('input', function() {
+    drawTriangle();
+  });
+
+  function f1(){
+    //alert("visualise !");
+
+    targetObject = document.getElementById("my_audio");
+    //alert("my_audio =" + targetObject);
+    //alert(targetObject);
+    targetObject.play();
+
+    context = new AudioContext;
+    //alert("context =" + context);
+
+    analyser = context.createAnalyser();
+    //alert("analyser =" + analyser);
+
+    let src = context.createMediaElementSource(targetObject);
+    //alert("src = " + src);
+    let aa = src.connect(analyser);
+    //alert("aa =" + aa);
+    let bb = analyser.connect(context.destination);
+    //alert("bb =" + bb);
+    loop();
+  }
+
+  function f2(){
+    // alert("!");
+    targetObject = document.getElementById("my_audio");
+    targetObject.pause();
+    targetObject.currentTime = 0;
+  }
+
+  function loop(){
+    window.requestAnimationFrame(loop);
+    const array = new Uint8Array(analyser.frequencyBinCount);
+    analyser.getByteFrequencyData(array);
+
+    t1.innerHTML = array[40];
+  }
+
+  // При загрузке страницы рисуем треугольник
+  drawTriangle();
+</script>
 </body>
 </html>

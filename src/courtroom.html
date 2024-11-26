@@ -1,10 +1,342 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>$Title$</title>
+    <meta charset="UTF-8">
+    <title>Суд идёт!</title>
 </head>
+
+<style>
+    html, body {
+        height: 100%;
+        margin: 0; /* Remove default margins */
+        padding: 0; /* Remove default padding */
+        background-image: url('Screenshot-court4.webp'); /* Replace with your image URL */
+        background-size: auto;
+        background-color: black;
+        background-position: top;
+        background-repeat: no-repeat; /* Prevent image repetition */
+    }
+
+    .container {
+        /* Center the button */
+        display: flex;
+        height: 100px; /* Make it full viewport height */
+        position: relative;
+    }
+
+    .sprite-button {
+        background: none; /* Remove default button background */
+        border: none; /* Remove default button border */
+        padding: 0; /* Remove default button padding */
+        position: absolute;
+    }
+
+    .sprite-button img {
+        width: auto; /* Adjust the size as needed */
+        height: auto;
+        cursor: pointer;
+    }
+
+    .sprite-button .defense_team {
+        height: 400px;
+    }
+
+    .option-button {
+        padding: 10px;
+        color: darkmagenta;
+        text-align: center;
+        position: relative;
+        left: 85%;
+        top: 50%;
+        display: none;
+    }
+
+    #showButton2{
+        color: darkred;
+    }
+
+    #Ema {
+        bottom: -550%;
+        left: 51%;
+        transform: translateX(-50%);
+    }
+
+    #Trucy, #Apollo {
+        top: 380%;
+        right: 340px;
+        transform: translateY(-50%);
+    }
+
+    #Klavier{
+        top: 395%;
+        left: 379px;
+        transform: translateY(-50%);
+    }
+
+    #Judge{
+        top: -17px;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+
+    #equalizer{
+        position: absolute;
+    }
+
+    h1, p {
+        opacity: 80%;
+        color: lime;
+        margin-left: 10px;
+    }
+
+    #sprite{
+        width: auto; /* Adjust the size as needed */
+        height: auto;
+        right: 20%;
+        bottom: 0%;
+        position: absolute;
+    }
+
+</style>
+
 <body>
-$END$
+<button id="showButton" class="option-button" onclick="showSpriteButton()">Вернуться в зал суда</button>
+<button id="showButton2" class="option-button" onclick="stopAudio()">Пауза</button>
+<h1 id="active_player"></h1>
+<p id="active_character">Нажмите на персонажа,</p>
+<p id="active_melody">чтобы заиграла его тема</p>
+<canvas id="equalizer" width="250" height="300"></canvas>
+<div id="sprite_container"><p></p></div>
+
+<div class="container">
+    <button id="Judge" class="sprite-button" onclick="toggleSpriteButton(5)">
+        <img src="AJJudgeGallery.webp" alt="Sprite Button">
+    </button>
+
+    <button id="Trucy" class="sprite-button" onclick="toggleSpriteButton(3)">
+        <img class="defense_team" src="Trucy_and_Apollo.png" alt="Sprite Button">
+    </button>
+
+    <button id="Apollo" class="sprite-button" onclick="toggleSpriteButton(2)">
+        <img class="defense_team" src="ApolloAlone.png" alt="Sprite Button">
+    </button>
+
+    <button id="Klavier" class="sprite-button" onclick="toggleSpriteButton(4)">
+        <img src="Sidefacingklavierhd.webp" alt="Sprite Button">
+    </button>
+
+    <button id="Ema" class="sprite-button" onclick="toggleSpriteButton(1)">
+        <img src="EmaSkyeSprite.webp" alt="Sprite Button">
+    </button>
+
+</div>
+<audio src="audio/EmaSkye.mp3" id="Ema_audio"></audio>
+<audio src="audio/GuiltyLove.mp3" id="Klavier_audio"></audio>
+<audio src="audio/Apollo.mp3" id="Apollo_audio"></audio>
+<audio src="audio/Trucy.mp3" id="Trucy_audio"></audio>
+<audio src="audio/Allegro2007.mp3" id="Judge_audio"></audio>
 </body>
 </html>
+
+<script>
+    let spriteButtonVisible = true;
+
+    const canvas = document.getElementById('equalizer');
+    const ctx = canvas.getContext('2d');
+
+    let aa = null;
+    let bb = null;
+    let path;
+    const barCount = 25; // Количество баров эквалайзера
+    context = new AudioContext;
+    analyser = context.createAnalyser();
+    let r, g, blue;
+
+    const currentImage = document.getElementById('sprite_container').innerHTML;
+
+    let imageIndex = 0;
+    const images = [
+        'sprite1.gif', 'sprite2.gif', 'sprite3.gif', 'sprite4.gif'
+    ];
+    const changeInterval = 2;
+    let n;
+
+    function toggleSpriteButton(number) {
+        n = number;
+        const spriteButtons = document.querySelectorAll(".sprite-button"); // Get ALL elements with this class
+        spriteButtons.forEach(button => {
+            button.style.display = spriteButtonVisible ? "none" : "block";
+        });
+        const optionButtons = document.querySelectorAll(".option-button"); // Get ALL elements with this class
+        optionButtons.forEach(button => {
+            button.style.display = "block";
+        });
+
+        spriteButtonVisible = !spriteButtonVisible;
+
+        if (!spriteButtonVisible) {
+            switch (number){
+                case 1:
+                    changeBackgroundAndPlayMusic1();
+                    break;
+                case 2:
+                    changeBackgroundAndPlayMusic2();
+                    break;
+                case 3:
+                    changeBackgroundAndPlayMusic3();
+                    break;
+                case 4:
+                    changeBackgroundAndPlayMusic4();
+                    break;
+                case 5:
+                    changeBackgroundAndPlayMusic5();
+                    break;
+            }
+        }
+    }
+
+    async function showSpriteButton() {
+        targetObject.pause();
+        await new Promise(resolve => setTimeout(resolve, 500));
+        clearMelodyInfo();
+        const spriteButtons = document.querySelectorAll(".sprite-button"); // Get ALL elements with this class
+        spriteButtons.forEach(button => {
+            button.style.display = "block";
+        });
+        const optionButtons = document.querySelectorAll(".option-button"); // Get ALL elements with this class
+        optionButtons.forEach(button => {
+            button.style.display = "none";
+        });
+        spriteButtonVisible = true;
+        document.body.style.backgroundImage = "url('Screenshot-court4.webp')";
+    }
+
+
+    function playAudio(){
+        targetObject.play();
+        document.getElementById('showButton2').innerHTML = "Пауза";
+        active_player.innerHTML = "Играет: ";
+        changeImage(path);
+        let src = context.createMediaElementSource(targetObject);
+        aa = src.connect(analyser);
+        bb = analyser.connect(context.destination);
+    }
+
+    function stopAudio(){
+        playPauseButton = document.getElementById('showButton2');
+        if (targetObject.paused) {
+            targetObject.play();
+            playPauseButton.innerHTML = "Пауза";
+        } else {
+            targetObject.pause();
+            playPauseButton.innerHTML = "Воспроизвести";
+        }
+    }
+
+    function clearMelodyInfo(){
+        active_player.innerHTML ="";
+        active_character.innerHTML = "Нажмите на персонажа,";
+        active_melody.innerHTML = "чтобы заиграла его тема";
+        sprite_container.innerHTML = "<p> </p>";
+    }
+
+    function changeBackgroundAndPlayMusic1() {
+        document.body.style.backgroundImage = "url('AJ_Witness_Stand.webp')"; // Replace with your new background
+        targetObject = document.getElementById("Ema_audio");
+        active_character.innerHTML = "Ema Skye"
+        active_melody.innerHTML = "Science-Minded Detective"
+        path = "Ema";
+        r = 20; g = 153; blue = 6;
+        playAudio();
+        draw();
+    }
+
+    function changeBackgroundAndPlayMusic2() {
+        document.body.style.backgroundImage = "url('DefenseBench.webp')"; // Replace with your new background
+        targetObject = document.getElementById("Apollo_audio");
+        active_character.innerHTML = "Apollo Justice"
+        active_melody.innerHTML = "Objection! 2007"
+        path = "Apollo";
+        r = 250; g = 0; blue = 7;
+        playAudio();
+        draw();
+    }
+
+    function changeBackgroundAndPlayMusic3() {
+        document.body.style.backgroundImage = "url('AJ_Co-counsel.webp')"; // Replace with your new background
+        targetObject = document.getElementById("Trucy_audio");
+        active_character.innerHTML = "Trucy Wright"
+        active_melody.innerHTML = "Child of Magic"
+        path = "Trucy";
+        r = 10; g = 63; blue = 204;
+        playAudio();
+        draw();
+    }
+
+    function changeBackgroundAndPlayMusic4() {
+        document.body.style.backgroundImage = "url('ProsecutionBench.webp')"; // Replace with your new background
+        targetObject = document.getElementById("Klavier_audio");
+        active_character.innerHTML = "Klavier Gavin"
+        active_melody.innerHTML = "Guilty Love"
+        path = "Klavier";
+        r = 79; g = 10; blue = 108;
+        playAudio();
+        draw();
+    }
+
+    function changeBackgroundAndPlayMusic5() {
+        document.body.style.backgroundImage = "url('JudgeBench.webp')"; // Replace with your new background
+        targetObject = document.getElementById("Judge_audio");
+        active_character.innerHTML = "Cross-examination"
+        active_melody.innerHTML = "Allegro 2007"
+        path = "Judge";
+        r = 29; g = 33; blue = 18;
+        playAudio();
+        draw();
+    }
+
+    function draw() {
+        //  Проверка, что canvas и ctx определены
+        //if (!canvas || !ctx) return;
+        //const volume = targetObject.volume;
+
+        requestAnimationFrame(draw);
+        const dataArray = new Uint8Array(analyser.frequencyBinCount);
+        analyser.getByteFrequencyData(dataArray);
+
+        ctx.fillStyle = 'black';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        const barWidth = (canvas.width / barCount) - 1;
+
+        for (let i = 0; i < barCount; i++) {
+            const barHeight = dataArray[i] * 1.2;
+            const x = i * (barWidth + 1);
+
+            if (i % 3 === 0) {
+                if (barHeight > 11 && barHeight < 60 && (barHeight % 13 === 0)) {
+                    changeImage(path);
+                } else if (barHeight > 107 && barHeight < 150 && (barHeight % 23 === 0)) {
+                    changeImage(path);
+                }
+            }
+
+            ctx.fillStyle = `rgb(${barHeight + r}, ${barHeight + g}, ${barHeight + blue})`;
+            ctx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
+        }
+    }
+
+    function changeImage(path) {
+        sprite_container.innerHTML = '<img id="sprite" alt="Judge Gallery">';
+        document.getElementById("sprite").src = `sprites/${path}/${images[imageIndex]}`;
+        imageIndex = (imageIndex + 1) % images.length;
+    }
+
+    function stopChangeImage() {
+        showSpriteButton();
+        sprite_container.innerHTML = '<p></p>';
+    }
+
+    let lastImageChange = 0;
+
+</script>

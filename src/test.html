@@ -1,10 +1,73 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <title>$Title$</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Простейший эквалайзер</title>
+  <style>
+    body { display: flex; flex-direction: column; align-items: center; }
+    canvas { border: 1px solid black; }
+  </style>
 </head>
 <body>
-$END$
+<h1>Эквалайзер</h1>
+<canvas id="equalizer" width="600" height="300"></canvas>
+<div>
+  <button onclick="playMusic()">Играть</button>
+  <button onclick="stopMusic()">Стоп</button>
+  <audio id="audio" src="SpaceGadget.mp3"></audio>
+</div>
+
+<script>
+  const canvas = document.getElementById('equalizer');
+  const ctx = canvas.getContext('2d');
+  const audio = document.getElementById('audio');
+
+  let audioContext, analyser, source;
+  const barCount = 64; // Количество баров эквалайзера
+
+  function setupAudio() {
+    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    analyser = audioContext.createAnalyser();
+    analyser.fftSize = 256; // Размер FFT, может быть 256, 512, 1024 и т.д.
+    source = audioContext.createMediaElementSource(audio);
+    source.connect(analyser);
+    analyser.connect(audioContext.destination);
+  }
+
+  function draw() {
+    requestAnimationFrame(draw);
+    const dataArray = new Uint8Array(analyser.frequencyBinCount);
+    analyser.getByteFrequencyData(dataArray);
+
+    ctx.fillStyle = 'black';
+    ctx.fillRect(0, 0, canvas.width, canvas.height); // Очистить экран
+
+    const barWidth = (canvas.width / barCount) - 1; // Ширина каждого бара
+
+    for (let i = 0; i < barCount; i++) {
+      const barHeight = dataArray[i] / 2; // Высота бара
+      const x = i * (barWidth + 1); // Позиция по X
+
+      ctx.fillStyle = `rgb(${barHeight + 100}, ${barHeight + 40}, ${barHeight * Math.random()})`; // Цвет бара
+      ctx.fillRect(x, canvas.height - barHeight, barWidth, barHeight); // Рисуем бар
+    }
+  }
+
+  function playMusic() {
+    if (!audioContext) {
+      setupAudio();
+    }
+    audioContext.resume().then(() => {
+      audio.play();
+      draw(); // Запускаем рисование эквалайзера
+    });
+  }
+
+  function stopMusic() {
+    audio.pause();
+    audio.currentTime = 0;
+  }
+</script>
 </body>
 </html>
